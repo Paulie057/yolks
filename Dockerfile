@@ -41,13 +41,12 @@ RUN dpkg --add-architecture i386 \
         libsqlite3-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Vytvoření spouštěcího entrypointu přímo v obrazu
-# Tento skript vezme Pterodactyl proměnné {{ }} a převede je na funkční příkaz
+# OPRAVENO: Vytvoření entrypointu s ošetřením znaků $
 RUN printf '#!/bin/bash\n\
 cd /home/container\n\
 # Převod Pterodactyl {{VAR}} na shell $VAR\n\
-MODIFIED_STARTUP=$(echo ${STARTUP} | sed -e "s/{{/${/g" -e "s/}}/}/g")\n\
-echo ":/home/container$ ${MODIFIED_STARTUP}"\n\
+MODIFIED_STARTUP=$(echo -e "${STARTUP}" | sed -e "s/{{/\\${/g" -e "s/}}/}/g")\n\
+echo ":/home/container\$ ${MODIFIED_STARTUP}"\n\
 \n\
 # Spuštění výsledného příkazu\n\
 eval ${MODIFIED_STARTUP}' > /entrypoint.sh \
