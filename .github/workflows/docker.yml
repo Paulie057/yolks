@@ -21,11 +21,8 @@ jobs:
       - name: Set lowercase owner
         run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
-      - name: Debug owner
-        run: echo "Owner is $OWNER_LC"
-
       - name: Build image
-        run: docker build -t ghcr.io/${{ env.OWNER_LC }}/yolks:rs2vietnam-wine:latest .
+        run: docker build -t ghcr.io/${{ env.OWNER_LC }}/rs2vietnam-wine:latest .
 
       - name: Push image
-        run: docker push ghcr.io/${{ env.OWNER_LC }}/yolks:rs2vietnam-wine:latest
+        run: docker push ghcr.io/${{ env.OWNER_LC }}/rs2vietnam-wine:latest
