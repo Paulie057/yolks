@@ -26,7 +26,16 @@ RUN dpkg --add-architecture i386 \
         libstdc++6:i386 \
         wine64 \
         wine32 \
+        libntlm0 \
+        gnutls-bin \
     && rm -rf /var/lib/apt/lists/*
 
+# Vytvoření entrypointu přímo v Dockerfilu (nebo ho tam nakopíruj ze souboru)
+COPY ./entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 USER container
+ENV  USER=container HOME=/home/container
 WORKDIR /home/container
+
+CMD ["/bin/bash", "/entrypoint.sh"]
