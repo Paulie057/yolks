@@ -1,4 +1,3 @@
-# Použijeme stabilní Debian základ od Pterodactylu
 FROM ghcr.io/parkervcp/yolks:debian
 
 LABEL author="Daniel Hruska"
@@ -10,8 +9,6 @@ ENV DISPLAY=:99
 
 USER root
 
-# 1. Povolení 32bit architektury (nutné pro Wine a SteamCMD)
-# 2. Instalace Wine a všech závislostí pro Rising Storm 2
 RUN dpkg --add-architecture i386 \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -39,23 +36,27 @@ RUN dpkg --add-architecture i386 \
         libntlm0 \
         gnutls-bin \
         libsqlite3-0 \
+    && mkdir -p /tmp/.X11-unix \
+    && chmod 1777 /tmp/.X11-unix \
+    && if [ -x /usr/bin/wine64 ]; then ln -sf /usr/bin/wine64 /usr/local/bin/wine64; fi \
+    && if [ -x /usr/bin/wine ]; then ln -sf /usr/bin/wine /usr/local/bin/wine; fi \
     && rm -rf /var/lib/apt/lists/*
 
-# OPRAVENO: Vytvoření entrypointu s ošetřením znaků $
-RUN printf '#!/bin/bash\n\
-cd /home/container\n\
-# Převod Pterodactyl {{VAR}} na shell $VAR\n\
-MODIFIED_STARTUP=$(echo -e "${STARTUP}" | sed -e "s/{{/\\${/g" -e "s/}}/}/g")\n\
-echo ":/home/container\$ ${MODIFIED_STARTUP}"\n\
-\n\
-# Spuštění výsledného příkazu\n\
-eval ${MODIFIED_STARTUP}' > /entrypoint.sh \
-    && chmod +x /entrypoint.sh
+RUN cat <<'EOF' > /entrypoint.sh
+#!/bin/bash
+set -e
 
-# Nastavení uživatele a pracovního adresáře
+cd /home/container
+
+echo ":/home/container$ ${STARTUP}"
+
+exec /bin/bash -lc "${STARTUP}"
+EOF
+
+RUN chmod +x /entrypoint.sh
+
 USER container
 ENV USER=container HOME=/home/container
 WORKDIR /home/container
 
-# Spuštění přes náš entrypoint
-CMD ["/bin/bash", "/entrypoint.sh"]
+CMD ["/entrypoint.sh"]
